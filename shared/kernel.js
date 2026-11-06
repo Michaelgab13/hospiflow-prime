@@ -57,4 +57,11 @@ const SystemKernel = {
     }
 };
 
+ 
+agregarPaciente(nuevoPaciente) {
+    // nuevoPaciente debe ser un objeto: { id, nombre, triaje, cama, estado, diagnostico, insumos }
+    this.state.pacientes.push(nuevoPaciente);
+    this.save();
+}
+
 SystemKernel.init();

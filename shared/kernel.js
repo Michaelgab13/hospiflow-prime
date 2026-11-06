@@ -4,8 +4,8 @@ const SystemKernel = {
 
     state: {
         pacientes: [
-            { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', notas: ['Paciente estable tras reanimación inicial.'], insumos: ['Nitroglicerina'] },
-            { id: 'HC-442109', nombre: 'María Rodríguez', triaje: 'Amarillo', cama: 'Cama 102', estado: 'Admisión', diagnostico: 'Apendicitis Aguda', notas: ['En espera de valoración quirúrgica.'], insumos: ['Solución Fisiológica'] }
+            { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', notas: ['Paciente estable tras reanimación inicial.'], ordenes: [{ tipo: 'Farmacia / Medicamento', detalle: 'Nitroglicerina sublingual', justificacion: 'Control de dolor coronario' }], insumos: ['Nitroglicerina'] },
+            { id: 'HC-442109', nombre: 'María Rodríguez', triaje: 'Amarillo', cama: 'Cama 102', estado: 'Admisión', diagnostico: 'Apendicitis Aguda', notas: ['En espera de valoración quirúrgica.'], ordenes: [], insumos: ['Solución Fisiológica'] }
         ],
         quirofanos: [
             { id: 'Q-01', nombre: 'Quirófano Central', estado: 'Ocupado', paciente: 'Carlos Mendoza', cirujano: 'Dr. Silva' }
@@ -59,11 +59,29 @@ const SystemKernel = {
         this.save();
     },
 
+    darDeAltaPaciente(pacienteId) {
+        const p = this.state.pacientes.find(x => x.id === pacienteId);
+        if (p) {
+            p.estado = 'Alta Médica';
+            p.cama = 'Ninguna (Liberada)';
+            this.save();
+        }
+    },
+
     agregarNotaPaciente(pacienteId, nuevaNota) {
         const p = this.state.pacientes.find(x => x.id === pacienteId);
         if (p) {
             if (!p.notas) p.notas = [];
             p.notas.push(nuevaNota);
+            this.save();
+        }
+    },
+
+    agregarOrdenClinica(pacienteId, nuevaOrden) {
+        const p = this.state.pacientes.find(x => x.id === pacienteId);
+        if (p) {
+            if (!p.ordenes) p.ordenes = [];
+            p.ordenes.push(nuevaOrden);
             this.save();
         }
     },
@@ -87,7 +105,6 @@ const SystemKernel = {
         this.save();
     },
 
-    // Verificador automático basado en reloj del sistema (Hora HH:MM)
     verificarHorariosPersonal() {
         if (!this.state.personal) return;
         const ahora = new Date();
@@ -97,9 +114,8 @@ const SystemKernel = {
         this.state.personal.forEach(per => {
             if (per.horario && per.horario.includes('-')) {
                 const partes = per.horario.split('-');
-                const horaFin = partes[1].trim(); // Extrae la hora de cierre del turno (ej: 16:00)
+                const horaFin = partes[1].trim();
                 
-                // Si la hora actual supera la hora de fin del turno, cambia automáticamente a Fuera de Turno
                 if (horaActual >= horaFin && per.disponibilidad !== 'Fuera de Turno') {
                     per.disponibilidad = 'Fuera de Turno';
                     modificado = true;
@@ -114,13 +130,3 @@ const SystemKernel = {
 };
 
 SystemKernel.init();
-
-// Añade esta función dentro de SystemKernel en shared/kernel.js
-agregarOrdenClinica(pacienteId, nuevaOrden) {
-    const p = this.state.pacientes.find(x => x.id === pacienteId);
-    if (p) {
-        if (!p.ordenes) p.ordenes = [];
-        p.ordenes.push(nuevaOrden);
-        this.save();
-    }
-}

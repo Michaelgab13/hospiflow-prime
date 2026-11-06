@@ -1,0 +1,11 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/hospitflow", "dest": "/hospitflow/index.html" },
+    { "src": "/hospitflow/farmacia", "dest": "/hospitflow/farmacia.html" },
+    { "src": "/medtrack", "dest": "/medtrack/index.html" },
+    { "src": "/medtrack/expediente", "dest": "/medtrack/expediente.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

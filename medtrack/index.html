@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedTrack - Módulo ECE & Triaje</title>
+    <title>MedTrack - Módulo ECE & Órdenes Clínicas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/shared/kernel.js"></script>
@@ -13,15 +13,15 @@
     <nav class="bg-blue-900 p-4 border-b border-blue-800 flex justify-between items-center">
         <div class="flex items-center space-x-3">
             <a href="/" class="text-blue-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
-            <span class="font-bold text-lg">MEDTRACK (ECE) - Expediente Clínico & Notas</span>
+            <span class="font-bold text-lg">MEDTRACK (ECE) - Expediente & Órdenes Clínicas</span>
         </div>
-        <span class="bg-blue-950 text-blue-300 text-xs px-3 py-1 rounded-full font-mono"><i class="fa-solid fa-shield-halved mr-1"></i> Modo Médico / Admin</span>
+        <span class="bg-blue-950 text-blue-300 text-xs px-3 py-1 rounded-full font-mono"><i class="fa-solid fa-file-medical mr-1"></i> Módulo Médico Activo</span>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 space-y-6">
         
         <!-- Formulario de Admisión -->
-        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm">
             <h2 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-user-plus mr-2"></i>Admisión y Triaje de Paciente</h2>
             <form id="formPaciente" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input type="text" id="nombreInput" placeholder="Nombre del Paciente" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
@@ -35,9 +35,9 @@
             </form>
         </section>
 
-        <!-- Listado de Pacientes con Notas Clínicas -->
-        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid id-card mr-2"></i>Expedientes y Notas de Evolución en Vivo</h2>
+        <!-- Listado con Perfiles Expandibles y Órdenes Clínicas -->
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-sm">
+            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid fa-clipboard-user mr-2"></i>Pacientes Activos y Órdenes Médicas</h2>
             <div id="triajeContainer" class="space-y-4">
                 <!-- Dinámico -->
             </div>
@@ -55,7 +55,7 @@
                             <div>
                                 <div class="flex items-center space-x-3">
                                     <h3 class="font-bold text-lg">${p.nombre}</h3>
-                                    <span class="text-xs text-slate-400">ID: ${p.id}</span>
+                                    <span class="text-xs text-slate-400 font-mono">ID: ${p.id}</span>
                                     <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : p.triaje === 'Amarillo' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'}">${p.triaje}</span>
                                 </div>
                                 <p class="text-xs text-slate-400 mt-1">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="text-teal-400">${p.estado}</span></p>
@@ -69,15 +69,44 @@
                             </div>
                         </div>
 
-                        <!-- Sección de Notas Clínicas -->
-                        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
-                            <span class="text-xs font-bold text-blue-300"><i class="fa-solid fa-notes-medical mr-1"></i> Notas Clínicas / Evolución:</span>
-                            <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
-                                ${p.notas && p.notas.length > 0 ? p.notas.map(n => `<li>${n}</li>`).join('') : '<li class="text-slate-500 italic">Sin notas registradas.</li>'}
-                            </ul>
-                            <div class="flex space-x-2 pt-2">
-                                <input type="text" id="nota-${p.id}" placeholder="Escribir nota médica rápida..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white flex-grow">
-                                <button onclick="agregarNota('${p.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded font-bold transition">Guardar Nota</button>
+                        <!-- Sección Expandible de Expediente y Órdenes Clínicas -->
+                        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 space-y-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Notas Clínicas Previas -->
+                                <div>
+                                    <span class="text-xs font-bold text-blue-300 block mb-1"><i class="fa-solid fa-notes-medical mr-1"></i> Notas de Evolución:</span>
+                                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                        ${p.notas && p.notas.length > 0 ? p.notas.map(n => `<li>${n}</li>`).join('') : '<li class="text-slate-500 italic">Sin notas registradas.</li>'}
+                                    </ul>
+                                </div>
+
+                                <!-- Órdenes Clínicas Justificadas -->
+                                <div>
+                                    <span class="text-xs font-bold text-emerald-400 block mb-1"><i class="fa-solid fa-prescription-bottle-medical mr-1"></i> Órdenes Clínicas / Prescripciones:</span>
+                                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                        ${p.ordenes && p.ordenes.length > 0 ? p.ordenes.map(o => `<li><strong>${o.tipo}:</strong> ${o.detalle} <span class="text-slate-500 text-[10px]">(${o.justificacion})</span></li>`).join('') : '<li class="text-slate-500 italic">Sin órdenes emitidas.</li>'}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Formulario para agregar Orden Clínica Justificada -->
+                            <div class="pt-3 border-t border-slate-700 space-y-2">
+                                <span class="text-xs font-bold text-slate-300"><i class="fa-solid fa-plus-circle mr-1 text-blue-400"></i> Emitir Nueva Orden Clínica:</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    <select id="tipoOrden-${p.id}" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                        <option value="Laboratorio">Laboratorio</option>
+                                        <option value="Imagenología (Rayos X / PACS)">Imagenología (Rayos X)</option>
+                                        <option value="Farmacia / Medicamento">Farmacia (Dosis)</option>
+                                        <option value="Interconsulta">Interconsulta</option>
+                                    </select>
+                                    <input type="text" id="detalleOrden-${p.id}" placeholder="Detalle (Ej. Hemograma completo / Paracetamol 500mg)" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                    <input type="text" id="justificacionOrden-${p.id}" placeholder="Justificación clínica (Ej. Sospecha de infección)" class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
+                                </div>
+                                <div class="flex justify-end pt-1">
+                                    <button onclick="guardarOrden('${p.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-1.5 rounded font-bold transition">
+                                        <i class="fa-solid fa-check mr-1"></i> Guardar y Enviar Orden
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -85,15 +114,18 @@
             }
         }
 
-        function agregarNota(pacienteId) {
-            const input = document.getElementById(`nota-${pacienteId}`);
-            const textoNota = input.value.trim();
-            if (textoNota) {
-                SystemKernel.agregarNotaPaciente(pacienteId, textoNota);
-                input.value = '';
-                alert('Nota clínica añadida y sincronizada con éxito.');
+        function guardarOrden(pacienteId) {
+            const tipo = document.getElementById(`tipoOrden-${pacienteId}`).value;
+            const detalle = document.getElementById(`detalleOrden-${pacienteId}`).value.trim();
+            const justificacion = document.getElementById(`justificacionOrden-${pacienteId}`).value.trim();
+
+            if (detalle && justificacion) {
+                SystemKernel.agregarOrdenClinica(pacienteId, { tipo, detalle, justificacion });
+                document.getElementById(`detalleOrden-${pacienteId}`).value = '';
+                document.getElementById(`justificacionOrden-${pacienteId}`).value = '';
+                alert('Orden clínica emitida y justificada con éxito.');
             } else {
-                alert('Por favor escriba contenido para la nota.');
+                alert('Por favor complete tanto el detalle de la orden como su justificación clínica.');
             }
         }
 
@@ -111,8 +143,8 @@
                 cama: cama,
                 estado: 'Hospitalizado',
                 diagnostico: 'Evaluación inicial',
-                notas: ['Ingreso registrado por administración.'],
-                insumos: ['Kit Básico']
+                notas: ['Ingreso registrado por admisiones.'],
+                ordenes: []
             });
 
             e.target.reset();

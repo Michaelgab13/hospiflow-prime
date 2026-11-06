@@ -4,12 +4,11 @@ const SystemKernel = {
 
     state: {
         pacientes: [
-            { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', insumos: ['Nitroglicerina', 'Cánula O2'] },
-            { id: 'HC-442109', nombre: 'María Rodríguez', triaje: 'Amarillo', cama: 'Cama 102', estado: 'Admisión', diagnostico: 'Apendicitis Aguda', insumos: ['Solución Fisiológica'] }
+            { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', notas: ['Paciente estable tras reanimación inicial.'], insumos: ['Nitroglicerina'] },
+            { id: 'HC-442109', nombre: 'María Rodríguez', triaje: 'Amarillo', cama: 'Cama 102', estado: 'Admisión', diagnostico: 'Apendicitis Aguda', notas: ['En espera de valoración quirúrgica.'], insumos: ['Solución Fisiológica'] }
         ],
         quirofanos: [
-            { id: 'Q-01', nombre: 'Quirófano Central', estado: 'Ocupado', paciente: 'Carlos Mendoza', cirujano: 'Dr. Silva' },
-            { id: 'Q-02', nombre: 'Quirófano Emergencias', estado: 'Disponible', paciente: null, cirujano: null }
+            { id: 'Q-01', nombre: 'Quirófano Central', estado: 'Ocupado', paciente: 'Carlos Mendoza', cirujano: 'Dr. Silva' }
         ],
         personal: [
             { id: 1, nombre: 'Dr. Alejandro Silva', rol: 'Médico Urgencias', horario: '08:00 - 16:00', disponibilidad: 'En Cirugía' },
@@ -21,17 +20,17 @@ const SystemKernel = {
         const localData = localStorage.getItem('hospiflow_state');
         if (localData) {
             try {
-                const parsed = JSON.parse(localData);
-                // Asegurar que existan todas las propiedades clave
-                if (parsed.pacientes && parsed.personal) {
-                    this.state = parsed;
-                }
+                this.state = JSON.parse(localData);
             } catch (e) {
                 this.save();
             }
         } else {
             this.save();
         }
+
+        // Verificar automáticamente horarios al iniciar y cada minuto
+        this.verificarHorariosPersonal();
+        setInterval(() => this.verificarHorariosPersonal(), 60000);
 
         this.channel.onmessage = (event) => {
             if (event.data.type === 'STATE_UPDATE') {
@@ -60,11 +59,11 @@ const SystemKernel = {
         this.save();
     },
 
-    darDeAltaPaciente(pacienteId) {
+    agregarNotaPaciente(pacienteId, nuevaNota) {
         const p = this.state.pacientes.find(x => x.id === pacienteId);
         if (p) {
-            p.estado = 'Alta Médica';
-            p.cama = 'Ninguna (Liberada)';
+            if (!p.notas) p.notas = [];
+            p.notas.push(nuevaNota);
             this.save();
         }
     },
@@ -79,6 +78,36 @@ const SystemKernel = {
         const p = this.state.personal.find(x => x.id === personalId);
         if (p) {
             p.disponibilidad = nuevaDisp;
+            this.save();
+        }
+    },
+
+    removerPersonal(personalId) {
+        this.state.personal = this.state.personal.filter(x => x.id !== personalId);
+        this.save();
+    },
+
+    // Verificador automático basado en reloj del sistema (Hora HH:MM)
+    verificarHorariosPersonal() {
+        if (!this.state.personal) return;
+        const ahora = new Date();
+        const horaActual = ahora.getHours().toString().padStart(2, '0') + ':' + ahora.getMinutes().toString().padStart(2, '0');
+
+        let modificado = false;
+        this.state.personal.forEach(per => {
+            if (per.horario && per.horario.includes('-')) {
+                const partes = per.horario.split('-');
+                const horaFin = partes[1].trim(); // Extrae la hora de cierre del turno (ej: 16:00)
+                
+                // Si la hora actual supera la hora de fin del turno, cambia automáticamente a Fuera de Turno
+                if (horaActual >= horaFin && per.disponibilidad !== 'Fuera de Turno') {
+                    per.disponibilidad = 'Fuera de Turno';
+                    modificado = true;
+                }
+            }
+        });
+
+        if (modificado) {
             this.save();
         }
     }

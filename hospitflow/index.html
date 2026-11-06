@@ -32,12 +32,19 @@
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-user-clock text-teal-600 mr-2"></i>2. Control Operativo del Personal y Especialistas</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Formulario para agregar especialistas -->
+                
+                <!-- Formulario con Validación Numérica de Horario -->
                 <form id="formTurno" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <h3 class="font-bold text-sm text-slate-700"><i class="fa-solid fa-user-plus mr-1"></i> Registrar Nuevo Especialista</h3>
                     <input type="text" id="nombrePersonal" placeholder="Nombre (Ej. Dr. Carlos Ruiz)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
-                    <input type="text" id="rolPersonal" placeholder="Especialidad (Ej. Cardiología / Cirugía)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
-                    <input type="text" id="horarioPersonal" placeholder="Horario (Ej. 08:00 - 16:00)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                    <input type="text" id="rolPersonal" placeholder="Especialidad (Ej. Cardiología)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                    
+                    <!-- Campo de horario con placeholder explicativo -->
+                    <div>
+                        <input type="text" id="horarioPersonal" placeholder="Horario numérico (Ej. 08:00 - 16:00)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                        <p class="text-[10px] text-slate-400 mt-1">Formato requerido: HH:MM - HH:MM (Ej: 08:00 - 16:00)</p>
+                    </div>
+
                     <select id="dispPersonal" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
                         <option value="Disponible">Disponible</option>
                         <option value="En Consulta">En Consulta</option>
@@ -47,7 +54,7 @@
                     <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-lg transition">Registrar Especialista</button>
                 </form>
 
-                <!-- Listado interactivo de especialistas y disponibilidad -->
+                <!-- Listado de Especialistas -->
                 <div id="personalContainer" class="space-y-3 overflow-y-auto max-h-80 pr-1">
                     <!-- Dinámico -->
                 </div>
@@ -58,33 +65,35 @@
 
     <script>
         function renderHospitFlow() {
-            // Renderizar Pacientes / Camas
+            // Renderizar Pacientes
             const container = document.getElementById('pacientesContainer');
-            container.innerHTML = SystemKernel.state.pacientes.map(p => `
-                <div class="p-4 border rounded-xl ${p.estado === 'Alta Médica' ? 'bg-slate-50 border-slate-200 opacity-60' : p.triaje === 'Rojo' ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-base">${p.nombre} (${p.id})</span>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white'}">${p.triaje}</span>
+            if (container && SystemKernel.state.pacientes) {
+                container.innerHTML = SystemKernel.state.pacientes.map(p => `
+                    <div class="p-4 border rounded-xl ${p.estado === 'Alta Médica' ? 'bg-slate-50 border-slate-200 opacity-60' : p.triaje === 'Rojo' ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-base">${p.nombre} (${p.id})</span>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white'}">${p.triaje}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="font-semibold text-teal-700">${p.estado}</span></p>
+                        <p class="text-xs text-slate-500 mt-1">Diagnóstico: ${p.diagnostico}</p>
+                        ${p.estado !== 'Alta Médica' ? `
+                            <button onclick="SystemKernel.darDeAltaPaciente('${p.id}')" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                                <i class="fa-solid fa-check mr-1"></i> Dar de Alta Médica
+                            </button>
+                        ` : '<span class="inline-block mt-3 text-xs text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Proceso Finalizado</span>'}
                     </div>
-                    <p class="text-xs text-slate-600 mt-2">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="font-semibold text-teal-700">${p.estado}</span></p>
-                    <p class="text-xs text-slate-500 mt-1">Diagnóstico: ${p.diagnostico}</p>
-                    ${p.estado !== 'Alta Médica' ? `
-                        <button onclick="SystemKernel.darDeAltaPaciente('${p.id}')" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition">
-                            <i class="fa-solid fa-check mr-1"></i> Dar de Alta Médica
-                        </button>
-                    ` : '<span class="inline-block mt-3 text-xs text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Proceso Finalizado</span>'}
-                </div>
-            `).join('');
+                `).join('');
+            }
 
-            // Renderizar Personal y Especialistas con cambios de disponibilidad en vivo
+            // Renderizar Personal
             const pContainer = document.getElementById('personalContainer');
-            if(SystemKernel.state.personal) {
+            if (pContainer && SystemKernel.state.personal) {
                 pContainer.innerHTML = SystemKernel.state.personal.map(per => `
                     <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-2 shadow-sm">
                         <div class="flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-slate-800 text-sm">${per.nombre}</span>
-                                <p class="text-slate-500">${per.rol} | <i class="fa-regular fa-clock mr-1"></i>${per.horario}</p>
+                                <p class="text-slate-500">${per.rol} | <i class="fa-regular fa-clock mr-1"></i><strong>${per.horario}</strong></p>
                             </div>
                             <span class="px-2.5 py-1 rounded font-bold text-[10px] ${
                                 per.disponibilidad === 'Disponible' ? 'bg-emerald-100 text-emerald-800' :
@@ -102,6 +111,7 @@
             }
         }
 
+        // Validación estricta del formato de hora numérico (Ej: 08:00 - 16:00)
         document.getElementById('formTurno').addEventListener('submit', (e) => {
             e.preventDefault();
             const nombre = document.getElementById('nombrePersonal').value;
@@ -109,9 +119,17 @@
             const horario = document.getElementById('horarioPersonal').value;
             const disponibilidad = document.getElementById('dispPersonal').value;
 
+            // Validación Regex para asegurar formato numérico de horas (HH:MM - HH:MM)
+            const regexHorario = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])\s*-\s*([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+            
+            if (!regexHorario.test(horario)) {
+                alert('⚠️ Formato de horario inválido. Por favor ingrese los valores numéricos correctos en formato HH:MM - HH:MM (Ej: 08:00 - 16:00).');
+                return; // Detiene el envío si no es válido
+            }
+
             SystemKernel.agregarTurnoPersonal(nombre, rol, horario, disponibilidad);
             e.target.reset();
-            alert('Especialista registrado y turnos operativos actualizados con éxito.');
+            alert('¡Especialista registrado con éxito y horario validado!');
         });
 
         window.addEventListener('kernelUpdated', renderHospitFlow);

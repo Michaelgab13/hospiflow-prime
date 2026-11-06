@@ -20,10 +20,26 @@
 
     <main class="max-w-7xl mx-auto p-6 space-y-6">
         
+        <!-- Formulario para Añadir Paciente -->
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid fa-stethosocpe mr-2"></i>Gestión de Triaje Digital (Manchester / ESI)</h2>
+            <h2 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-user-plus mr-2"></i>Admisión y Triaje de Nuevo Paciente</h2>
+            <form id="formPaciente" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="nombreInput" placeholder="Nombre del Paciente" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                <select id="triajeInput" class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <option value="Rojo">Rojo (Emergencia)</option>
+                    <option value="Amarillo">Amarillo (Urgente)</option>
+                    <option value="Verde">Verde (Leve)</option>
+                </select>
+                <input type="text" id="camaInput" placeholder="Ubicación / Cama (Ej. Cama 103)" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg p-2.5 text-sm transition shadow">Registrar en el Sistema</button>
+            </form>
+        </section>
+
+        <!-- Listado Dinámico de Triaje -->
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid fa-list-check mr-2"></i>Cola de Pacientes Activos</h2>
             <div id="triajeContainer" class="space-y-4">
-                <!-- Se llena con JS -->
+                <!-- Se llena dinámicamente -->
             </div>
         </section>
 
@@ -38,19 +54,41 @@
                         <div class="flex items-center space-x-3">
                             <h3 class="font-bold text-lg">${p.nombre}</h3>
                             <span class="text-xs text-slate-400">ID: ${p.id}</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : p.triaje === 'Amarillo' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'}">${p.triaje}</span>
                         </div>
                         <p class="text-xs text-slate-400 mt-1">Ubicación Actual: <strong>${p.cama}</strong></p>
                     </div>
 
                     <div class="flex items-center space-x-2">
                         <span class="text-xs text-slate-400 mr-2">Cambiar Triaje:</span>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Rojo')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition">Rojo (Emergencia)</button>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Amarillo')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition">Amarillo (Urgente)</button>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Verde')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">Verde (Leve)</button>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Rojo')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Rojo</button>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Amarillo')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded">Amarillo</button>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Verde')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded">Verde</button>
                     </div>
                 </div>
             `).join('');
         }
+
+        document.getElementById('formPaciente').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombreInput').value;
+            const triaje = document.getElementById('triajeInput').value;
+            const cama = document.getElementById('camaInput').value;
+            const nuevoId = 'HC-' + Math.floor(100000 + Math.random() * 900000);
+
+            SystemKernel.agregarPaciente({
+                id: nuevoId,
+                nombre: nombre,
+                triaje: triaje,
+                cama: cama,
+                estado: 'Hospitalizado',
+                diagnostico: 'Evaluación inicial pendiente',
+                insumos: ['Kit de Admisión']
+            });
+
+            e.target.reset();
+            alert('Paciente registrado con éxito. Sincronizado en tiempo real con HospitFlow HIS.');
+        });
 
         window.addEventListener('kernelUpdated', renderMedTrack);
         document.addEventListener('DOMContentLoaded', renderMedTrack);

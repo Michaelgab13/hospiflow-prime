@@ -2,7 +2,7 @@
 const SystemKernel = {
     channel: new BroadcastChannel('hospiflow_medtrack_sync'),
 
-    // Estado inicial sincronizado
+    // Estado inicial sincronizado con los 3 pilares del sistema
     state: {
         pacientes: [
             { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', insumos: ['Nitroglicerina', 'Cánula O2'] },
@@ -11,6 +11,10 @@ const SystemKernel = {
         quirofanos: [
             { id: 'Q-01', nombre: 'Quirófano Central', estado: 'Ocupado', paciente: 'Carlos Mendoza', cirujano: 'Dr. Silva' },
             { id: 'Q-02', nombre: 'Quirófano Emergencias', estado: 'Disponible', paciente: null, cirujano: null }
+        ],
+        personal: [
+            { id: 1, nombre: 'Dr. Alejandro Silva', rol: 'Médico Urgencias', turno: 'Mañana (24h)' },
+            { id: 2, nombre: 'Enf. Carmen Pérez', rol: 'Enfermería Jefe', turno: 'Mañana' }
         ]
     },
 
@@ -22,7 +26,6 @@ const SystemKernel = {
             this.save();
         }
 
-        // Escuchar cambios desde otras pestañas/módulos
         this.channel.onmessage = (event) => {
             if (event.data.type === 'STATE_UPDATE') {
                 this.state = event.data.state;
@@ -37,7 +40,6 @@ const SystemKernel = {
         window.dispatchEvent(new CustomEvent('kernelUpdated', { detail: this.state }));
     },
 
-    // Métodos dinámicos cruzados
     actualizarTriaje(pacienteId, nuevoTriaje) {
         const p = this.state.pacientes.find(x => x.id === pacienteId);
         if (p) {
@@ -46,19 +48,22 @@ const SystemKernel = {
         }
     },
 
-    asignarQuirofano(quirofanoId, pacienteNombre, cirujano) {
-        const q = this.state.quirofanos.find(x => x.id === quirofanoId);
-        if (q) {
-            q.estado = 'Ocupado';
-            q.paciente = pacienteNombre;
-            q.cirujano = cirujano;
+    agregarPaciente(nuevoPaciente) {
+        this.state.pacientes.push(nuevoPaciente);
+        this.save();
+    },
+
+    darDeAltaPaciente(pacienteId) {
+        const p = this.state.pacientes.find(x => x.id === pacienteId);
+        if (p) {
+            p.estado = 'Alta Médica';
+            p.cama = 'Ninguna (Liberada)';
             this.save();
         }
     },
 
-    // AHORA SÍ: La función está correctamente integrada dentro del objeto
-    agregarPaciente(nuevoPaciente) {
-        this.state.pacientes.push(nuevoPaciente);
+    agregarTurnoPersonal(nombre, rol, turno) {
+        this.state.personal.push({ id: Date.now(), nombre, rol, turno });
         this.save();
     }
 };

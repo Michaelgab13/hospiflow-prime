@@ -2,7 +2,7 @@
 const SystemKernel = {
     channel: new BroadcastChannel('hospiflow_medtrack_sync'),
 
-    // Estado inicial sincronizado con los 3 pilares del sistema
+    // Estado inicial sincronizado
     state: {
         pacientes: [
             { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', insumos: ['Nitroglicerina', 'Cánula O2'] },
@@ -13,8 +13,8 @@ const SystemKernel = {
             { id: 'Q-02', nombre: 'Quirófano Emergencias', estado: 'Disponible', paciente: null, cirujano: null }
         ],
         personal: [
-            { id: 1, nombre: 'Dr. Alejandro Silva', rol: 'Médico Urgencias', turno: 'Mañana (24h)' },
-            { id: 2, nombre: 'Enf. Carmen Pérez', rol: 'Enfermería Jefe', turno: 'Mañana' }
+            { id: 1, nombre: 'Dr. Alejandro Silva', rol: 'Médico Urgencias', horario: '08:00 - 16:00', disponibilidad: 'En Cirugía' },
+            { id: 2, nombre: 'Dra. Sofía Benítez', rol: 'Pediatra', horario: '14:00 - 22:00', disponibilidad: 'Disponible' }
         ]
     },
 
@@ -62,9 +62,17 @@ const SystemKernel = {
         }
     },
 
-    agregarTurnoPersonal(nombre, rol, turno) {
-        this.state.personal.push({ id: Date.now(), nombre, rol, turno });
+    agregarTurnoPersonal(nombre, rol, horario, disponibilidad) {
+        this.state.personal.push({ id: Date.now(), nombre, rol, horario, disponibilidad });
         this.save();
+    },
+
+    actualizarDisponibilidadPersonal(personalId, nuevaDisp) {
+        const p = this.state.personal.find(x => x.id === personalId);
+        if (p) {
+            p.disponibilidad = nuevaDisp;
+            this.save();
+        }
     }
 };
 

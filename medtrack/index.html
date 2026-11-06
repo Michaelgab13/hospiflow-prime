@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTrack - Módulo ECE & Triaje</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/shared/kernel.js"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen">
+
+    <nav class="bg-blue-900 p-4 border-b border-blue-800 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <a href="/" class="text-blue-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
+            <span class="font-bold text-lg">MEDTRACK (ECE) - Expediente Clínico & Triaje</span>
+        </div>
+        <span class="bg-blue-950 text-blue-300 text-xs px-3 py-1 rounded-full font-mono">Modo Médico Activo</span>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid fa-stethosocpe mr-2"></i>Gestión de Triaje Digital (Manchester / ESI)</h2>
+            <div id="triajeContainer" class="space-y-4">
+                <!-- Se llena con JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function renderMedTrack() {
+            const container = document.getElementById('triajeContainer');
+            container.innerHTML = SystemKernel.state.pacientes.map(p => `
+                <div class="p-4 bg-slate-900 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <h3 class="font-bold text-lg">${p.nombre}</h3>
+                            <span class="text-xs text-slate-400">ID: ${p.id}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Ubicación Actual: <strong>${p.cama}</strong></p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-slate-400 mr-2">Cambiar Triaje:</span>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Rojo')" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition">Rojo (Emergencia)</button>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Amarillo')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition">Amarillo (Urgente)</button>
+                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Verde')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">Verde (Leve)</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.addEventListener('kernelUpdated', renderMedTrack);
+        document.addEventListener('DOMContentLoaded', renderMedTrack);
+    </script>
+</body>
+</html>

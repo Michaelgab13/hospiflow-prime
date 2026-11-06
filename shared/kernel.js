@@ -54,14 +54,13 @@ const SystemKernel = {
             q.cirujano = cirujano;
             this.save();
         }
+    },
+
+    // AHORA SÍ: La función está correctamente integrada dentro del objeto
+    agregarPaciente(nuevoPaciente) {
+        this.state.pacientes.push(nuevoPaciente);
+        this.save();
     }
 };
-
- 
-agregarPaciente(nuevoPaciente) {
-    // nuevoPaciente debe ser un objeto: { id, nombre, triaje, cama, estado, diagnostico, insumos }
-    this.state.pacientes.push(nuevoPaciente);
-    this.save();
-}
 
 SystemKernel.init();

@@ -2,7 +2,6 @@
 const SystemKernel = {
     channel: new BroadcastChannel('hospiflow_medtrack_sync'),
 
-    // Estado inicial sincronizado
     state: {
         pacientes: [
             { id: 'HC-882910', nombre: 'Carlos Mendoza', triaje: 'Rojo', cama: 'Cama 101', estado: 'Hospitalizado', diagnostico: 'Infarto Agudo', insumos: ['Nitroglicerina', 'Cánula O2'] },
@@ -21,7 +20,15 @@ const SystemKernel = {
     init() {
         const localData = localStorage.getItem('hospiflow_state');
         if (localData) {
-            this.state = JSON.parse(localData);
+            try {
+                const parsed = JSON.parse(localData);
+                // Asegurar que existan todas las propiedades clave
+                if (parsed.pacientes && parsed.personal) {
+                    this.state = parsed;
+                }
+            } catch (e) {
+                this.save();
+            }
         } else {
             this.save();
         }
@@ -63,6 +70,7 @@ const SystemKernel = {
     },
 
     agregarTurnoPersonal(nombre, rol, horario, disponibilidad) {
+        if (!this.state.personal) this.state.personal = [];
         this.state.personal.push({ id: Date.now(), nombre, rol, horario, disponibilidad });
         this.save();
     },

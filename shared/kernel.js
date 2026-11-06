@@ -114,3 +114,13 @@ const SystemKernel = {
 };
 
 SystemKernel.init();
+
+// Añade esta función dentro de SystemKernel en shared/kernel.js
+agregarOrdenClinica(pacienteId, nuevaOrden) {
+    const p = this.state.pacientes.find(x => x.id === pacienteId);
+    if (p) {
+        if (!p.ordenes) p.ordenes = [];
+        p.ordenes.push(nuevaOrden);
+        this.save();
+    }
+}

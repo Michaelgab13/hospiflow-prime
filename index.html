@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HospitFlow & MedTrack Suite - Sistema Integral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col justify-between font-sans">
+
+    <!-- Header -->
+    <header class="p-6 text-center border-b border-slate-800">
+        <h1 class="text-3xl font-extrabold tracking-tight text-teal-400">HOSPIFLOW / MEDTRACK</h1>
+        <p class="text-sm text-slate-400 mt-1">Plataforma Unificada HIS & Expediente Clínico Electrónico (ECE)</p>
+    </header>
+
+    <!-- App Switcher Cards -->
+    <main class="max-w-5xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Módulo HospitFlow -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 flex flex-col justify-between hover:border-teal-500 transition duration-300 shadow-xl">
+            <div>
+                <div class="w-14 h-14 bg-teal-500/10 text-teal-400 rounded-xl flex items-center justify-center text-2xl mb-4 border border-teal-500/20">
+                    <i class="fa-solid fa-hospital-user"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">HospitFlow (HIS)</h2>
+                <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                    Módulo de Gestión Operativa, Censo de Camas en Tiempo Real, Programación Quirúrgica y Administración de Suministros (RCM).
+                </p>
+            </div>
+            <a href="/hospitflow" class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-xl text-center transition flex items-center justify-center">
+                Acceder a HospitFlow HIS <i class="fa-solid fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+        <!-- Módulo MedTrack -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8 flex flex-col justify-between hover:border-blue-500 transition duration-300 shadow-xl">
+            <div>
+                <div class="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center text-2xl mb-4 border border-blue-500/20">
+                    <i class="fa-solid fa-notes-medical"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">MedTrack (ECE)</h2>
+                <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                    Módulo Clínico para Expediente Digital Único, Triaje Urgencias (Manchester/ESI), Prescripción CPOE y Notificaciones Médicas.
+                </p>
+            </div>
+            <a href="/medtrack" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-center transition flex items-center justify-center">
+                Acceder a MedTrack ECE <i class="fa-solid fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-6 text-center text-xs text-slate-500 border-t border-slate-800">
+        Cumplimiento HIPAA / HL7 FHIR ready | HospitFlow Suite &copy; 2026
+    </footer>
+
+</body>
+</html>

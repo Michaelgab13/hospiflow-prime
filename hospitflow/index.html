@@ -15,12 +15,12 @@
             <a href="/" class="text-teal-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
             <span class="font-bold text-lg">HOSPITFLOW (HIS) - Censo, Camas & Operaciones</span>
         </div>
-        <span class="bg-teal-900 text-teal-200 text-xs px-3 py-1 rounded-full font-mono">Sincronizado en Vivo</span>
+        <span class="bg-teal-900 text-teal-200 text-xs px-3 py-1 rounded-full font-mono">Control de Turnos en Vivo</span>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 space-y-6">
         
-        <!-- Sección 1: Censo de Camas y Pacientes -->
+        <!-- Sección 1: Censo de Camas -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-bed text-teal-600 mr-2"></i>1. Administración de Ocupación y Camas</h2>
             <div id="pacientesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -28,23 +28,20 @@
             </div>
         </section>
 
-        <!-- Sección 2: Control Operativo del Personal y Especialistas -->
+        <!-- Sección 2: Control Operativo y Horarios de Especialistas -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-user-clock text-teal-600 mr-2"></i>2. Control Operativo del Personal y Especialistas</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <!-- Formulario con Validación Numérica de Horario -->
+                <!-- Formulario -->
                 <form id="formTurno" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <h3 class="font-bold text-sm text-slate-700"><i class="fa-solid fa-user-plus mr-1"></i> Registrar Nuevo Especialista</h3>
                     <input type="text" id="nombrePersonal" placeholder="Nombre (Ej. Dr. Carlos Ruiz)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
                     <input type="text" id="rolPersonal" placeholder="Especialidad (Ej. Cardiología)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
-                    
-                    <!-- Campo de horario con placeholder explicativo -->
                     <div>
-                        <input type="text" id="horarioPersonal" placeholder="Horario numérico (Ej. 08:00 - 16:00)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
-                        <p class="text-[10px] text-slate-400 mt-1">Formato requerido: HH:MM - HH:MM (Ej: 08:00 - 16:00)</p>
+                        <input type="text" id="horarioPersonal" placeholder="Horario (Ej. 08:00 - 16:00)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                        <p class="text-[10px] text-slate-400 mt-1">Formato: HH:MM - HH:MM. Si pasa la hora de fin, pasa a Fuera de Turno.</p>
                     </div>
-
                     <select id="dispPersonal" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
                         <option value="Disponible">Disponible</option>
                         <option value="En Consulta">En Consulta</option>
@@ -54,7 +51,7 @@
                     <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-lg transition">Registrar Especialista</button>
                 </form>
 
-                <!-- Listado de Especialistas -->
+                <!-- Listado con Opción de Despacho -->
                 <div id="personalContainer" class="space-y-3 overflow-y-auto max-h-80 pr-1">
                     <!-- Dinámico -->
                 </div>
@@ -65,7 +62,7 @@
 
     <script>
         function renderHospitFlow() {
-            // Renderizar Pacientes
+            // Renderizar Camas
             const container = document.getElementById('pacientesContainer');
             if (container && SystemKernel.state.pacientes) {
                 container.innerHTML = SystemKernel.state.pacientes.map(p => `
@@ -85,7 +82,7 @@
                 `).join('');
             }
 
-            // Renderizar Personal
+            // Renderizar Especialistas y Botón de Despacho
             const pContainer = document.getElementById('personalContainer');
             if (pContainer && SystemKernel.state.personal) {
                 pContainer.innerHTML = SystemKernel.state.personal.map(per => `
@@ -95,14 +92,18 @@
                                 <span class="font-bold text-slate-800 text-sm">${per.nombre}</span>
                                 <p class="text-slate-500">${per.rol} | <i class="fa-regular fa-clock mr-1"></i><strong>${per.horario}</strong></p>
                             </div>
-                            <span class="px-2.5 py-1 rounded font-bold text-[10px] ${
-                                per.disponibilidad === 'Disponible' ? 'bg-emerald-100 text-emerald-800' :
-                                per.disponibilidad === 'En Cirugía' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
-                            }">${per.disponibilidad}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2.5 py-1 rounded font-bold text-[10px] ${
+                                    per.disponibilidad === 'Disponible' ? 'bg-emerald-100 text-emerald-800' :
+                                    per.disponibilidad === 'En Cirugía' ? 'bg-red-100 text-red-800' :
+                                    per.disponibilidad === 'Fuera de Turno' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-800'
+                                }">${per.disponibilidad}</span>
+                                <button onclick="SystemKernel.removerPersonal(${per.id})" title="Despachar del sistema" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
                         </div>
                         <div class="flex items-center space-x-1 pt-1 border-t border-slate-100">
-                            <span class="text-[10px] text-slate-400 mr-1">Modificar Estado:</span>
-                            <button onclick="SystemKernel.actualizarDisponibilidadPersonal(${per.id}, 'Disponible')" class="px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded font-semibold">Disponible</button>
+                            <span class="text-[10px] text-slate-400 mr-1">Cambiar:</span>
+                            <button onclick="SystemKernel.actualizarDisponibilidadPersonal(${per.id}, 'Disponible')" class="px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded font-semibold">Disp.</button>
                             <button onclick="SystemKernel.actualizarDisponibilidadPersonal(${per.id}, 'En Consulta')" class="px-2 py-0.5 bg-blue-600 text-white text-[10px] rounded font-semibold">Consulta</button>
                             <button onclick="SystemKernel.actualizarDisponibilidadPersonal(${per.id}, 'En Cirugía')" class="px-2 py-0.5 bg-red-600 text-white text-[10px] rounded font-semibold">Cirugía</button>
                         </div>
@@ -111,7 +112,6 @@
             }
         }
 
-        // Validación estricta del formato de hora numérico (Ej: 08:00 - 16:00)
         document.getElementById('formTurno').addEventListener('submit', (e) => {
             e.preventDefault();
             const nombre = document.getElementById('nombrePersonal').value;
@@ -119,17 +119,15 @@
             const horario = document.getElementById('horarioPersonal').value;
             const disponibilidad = document.getElementById('dispPersonal').value;
 
-            // Validación Regex para asegurar formato numérico de horas (HH:MM - HH:MM)
             const regexHorario = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])\s*-\s*([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
-            
             if (!regexHorario.test(horario)) {
-                alert('⚠️ Formato de horario inválido. Por favor ingrese los valores numéricos correctos en formato HH:MM - HH:MM (Ej: 08:00 - 16:00).');
-                return; // Detiene el envío si no es válido
+                alert('⚠️ Formato de horario inválido. Use el formato numérico HH:MM - HH:MM (Ej: 08:00 - 16:00).');
+                return;
             }
 
             SystemKernel.agregarTurnoPersonal(nombre, rol, horario, disponibilidad);
             e.target.reset();
-            alert('¡Especialista registrado con éxito y horario validado!');
+            alert('Especialista registrado con éxito.');
         });
 
         window.addEventListener('kernelUpdated', renderHospitFlow);

@@ -13,16 +13,16 @@
     <nav class="bg-blue-900 p-4 border-b border-blue-800 flex justify-between items-center">
         <div class="flex items-center space-x-3">
             <a href="/" class="text-blue-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
-            <span class="font-bold text-lg">MEDTRACK (ECE) - Expediente Clínico & Triaje Digital</span>
+            <span class="font-bold text-lg">MEDTRACK (ECE) - Expediente Clínico & Notas</span>
         </div>
-        <span class="bg-blue-950 text-blue-300 text-xs px-3 py-1 rounded-full font-mono">Modo Médico Activo</span>
+        <span class="bg-blue-950 text-blue-300 text-xs px-3 py-1 rounded-full font-mono"><i class="fa-solid fa-shield-halved mr-1"></i> Modo Médico / Admin</span>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 space-y-6">
         
-        <!-- Formulario de Admisión e Ingreso -->
+        <!-- Formulario de Admisión -->
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-user-plus mr-2"></i>1. Gestión de Pacientes e Ingresos (Triaje)</h2>
+            <h2 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-user-plus mr-2"></i>Admisión y Triaje de Paciente</h2>
             <form id="formPaciente" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input type="text" id="nombreInput" placeholder="Nombre del Paciente" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
                 <select id="triajeInput" class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
@@ -30,14 +30,14 @@
                     <option value="Amarillo">Amarillo (Urgente)</option>
                     <option value="Verde">Verde (Leve)</option>
                 </select>
-                <input type="text" id="camaInput" placeholder="Cama / Ubicación (Ej. Cama 103)" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+                <input type="text" id="camaInput" placeholder="Cama (Ej. Cama 103)" required class="bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg p-2.5 text-sm transition">Registrar Ingreso</button>
             </form>
         </section>
 
-        <!-- Cola de Pacientes Activos -->
+        <!-- Listado de Pacientes con Notas Clínicas -->
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid fa-clipboard-user mr-2"></i>Seguimiento y Cambio de Triaje en Vivo</h2>
+            <h2 class="text-xl font-bold mb-4 text-blue-400"><i class="fa-solid id-card mr-2"></i>Expedientes y Notas de Evolución en Vivo</h2>
             <div id="triajeContainer" class="space-y-4">
                 <!-- Dinámico -->
             </div>
@@ -48,25 +48,53 @@
     <script>
         function renderMedTrack() {
             const container = document.getElementById('triajeContainer');
-            container.innerHTML = SystemKernel.state.pacientes.map(p => `
-                <div class="p-4 bg-slate-900 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <div class="flex items-center space-x-3">
-                            <h3 class="font-bold text-lg">${p.nombre}</h3>
-                            <span class="text-xs text-slate-400">ID: ${p.id}</span>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : p.triaje === 'Amarillo' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'}">${p.triaje}</span>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-1">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="text-teal-400">${p.estado}</span></p>
-                    </div>
+            if (container && SystemKernel.state.pacientes) {
+                container.innerHTML = SystemKernel.state.pacientes.map(p => `
+                    <div class="p-4 bg-slate-900 rounded-xl border border-slate-700 space-y-3">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                            <div>
+                                <div class="flex items-center space-x-3">
+                                    <h3 class="font-bold text-lg">${p.nombre}</h3>
+                                    <span class="text-xs text-slate-400">ID: ${p.id}</span>
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : p.triaje === 'Amarillo' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'}">${p.triaje}</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="text-teal-400">${p.estado}</span></p>
+                            </div>
 
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs text-slate-400 mr-2">Cambiar Triaje:</span>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Rojo')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Rojo</button>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Amarillo')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded">Amarillo</button>
-                        <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Verde')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded">Verde</button>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-400 mr-1">Cambiar Triaje:</span>
+                                <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Rojo')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded">Rojo</button>
+                                <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Amarillo')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded">Amarillo</button>
+                                <button onclick="SystemKernel.actualizarTriaje('${p.id}', 'Verde')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded">Verde</button>
+                            </div>
+                        </div>
+
+                        <!-- Sección de Notas Clínicas -->
+                        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 space-y-2">
+                            <span class="text-xs font-bold text-blue-300"><i class="fa-solid fa-notes-medical mr-1"></i> Notas Clínicas / Evolución:</span>
+                            <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                ${p.notas && p.notas.length > 0 ? p.notas.map(n => `<li>${n}</li>`).join('') : '<li class="text-slate-500 italic">Sin notas registradas.</li>'}
+                            </ul>
+                            <div class="flex space-x-2 pt-2">
+                                <input type="text" id="nota-${p.id}" placeholder="Escribir nota médica rápida..." class="bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white flex-grow">
+                                <button onclick="agregarNota('${p.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded font-bold transition">Guardar Nota</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
+            }
+        }
+
+        function agregarNota(pacienteId) {
+            const input = document.getElementById(`nota-${pacienteId}`);
+            const textoNota = input.value.trim();
+            if (textoNota) {
+                SystemKernel.agregarNotaPaciente(pacienteId, textoNota);
+                input.value = '';
+                alert('Nota clínica añadida y sincronizada con éxito.');
+            } else {
+                alert('Por favor escriba contenido para la nota.');
+            }
         }
 
         document.getElementById('formPaciente').addEventListener('submit', (e) => {
@@ -82,12 +110,13 @@
                 triaje: triaje,
                 cama: cama,
                 estado: 'Hospitalizado',
-                diagnostico: 'Evaluación inicial en curso',
-                insumos: ['Kit de Admisión General']
+                diagnostico: 'Evaluación inicial',
+                notas: ['Ingreso registrado por administración.'],
+                insumos: ['Kit Básico']
             });
 
             e.target.reset();
-            alert('Paciente registrado en MedTrack y sincronizado con HospitFlow HIS.');
+            alert('Paciente registrado con éxito.');
         });
 
         window.addEventListener('kernelUpdated', renderMedTrack);

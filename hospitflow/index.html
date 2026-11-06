@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HospitFlow - Módulo HIS Operativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/shared/kernel.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-teal-800 text-white p-4 shadow-lg flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <a href="/" class="text-teal-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
+            <span class="font-bold text-lg">HOSPITFLOW (HIS) - Censo & Quirófanos</span>
+        </div>
+        <span class="bg-teal-900 text-teal-200 text-xs px-3 py-1 rounded-full font-mono">Sincronizado con MedTrack</span>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        
+        <!-- Censo de Camas Dinámico -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-bed text-teal-600 mr-2"></i>Censo de Camas y Pacientes Sincronizados</h2>
+            <div id="pacientesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Se llena dinámicamente con JavaScript desde el Kernel -->
+            </div>
+        </section>
+
+        <!-- Programación de Quirófanos -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-microscope text-teal-600 mr-2"></i>Programación de Quirófanos (Asignación Inteligente)</h2>
+            <div id="quirofanosContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function renderUI() {
+            const container = document.getElementById('pacientesContainer');
+            container.innerHTML = SystemKernel.state.pacientes.map(p => `
+                <div class="p-4 border rounded-xl ${p.triaje === 'Rojo' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-lg">${p.nombre} (${p.id})</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white'}">${p.triaje}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-2">Ubicación: <strong>${p.cama}</strong> | Diagnóstico: ${p.diagnostico}</p>
+                    <p class="text-xs text-slate-500 mt-1">Insumos Cargados: ${p.insumos.join(', ')}</p>
+                </div>
+            `).join('');
+
+            const qContainer = document.getElementById('quirofanosContainer');
+            qContainer.innerHTML = SystemKernel.state.quirofanos.map(q => `
+                <div class="p-4 border rounded-xl ${q.estado === 'Ocupado' ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold">${q.nombre} (${q.id})</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded ${q.estado === 'Ocupado' ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'}">${q.estado}</span>
+                    </div>
+                    ${q.estado === 'Ocupado' ? `<p class="text-xs text-slate-600">Paciente: <strong>${q.paciente}</strong> | Cirujano: ${q.cirujano}</p>` : `
+                        <button onclick="SystemKernel.asignarQuirofano('${q.id}', 'Carlos Mendoza', 'Dr. Silva')" class="mt-2 bg-teal-600 text-white text-xs px-3 py-1.5 rounded font-bold hover:bg-teal-700">Asignar Cirugía de Emergencia</button>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        window.addEventListener('kernelUpdated', renderUI);
+        document.addEventListener('DOMContentLoaded', renderUI);
+    </script>
+</body>
+</html>

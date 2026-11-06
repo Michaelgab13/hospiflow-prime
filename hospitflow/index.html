@@ -10,65 +10,89 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans">
 
-    <!-- Navbar -->
     <nav class="bg-teal-800 text-white p-4 shadow-lg flex justify-between items-center">
         <div class="flex items-center space-x-3">
             <a href="/" class="text-teal-200 hover:text-white"><i class="fa-solid fa-house"></i></a>
-            <span class="font-bold text-lg">HOSPITFLOW (HIS) - Censo & Quirófanos</span>
+            <span class="font-bold text-lg">HOSPITFLOW (HIS) - Censo, Camas & Operaciones</span>
         </div>
-        <span class="bg-teal-900 text-teal-200 text-xs px-3 py-1 rounded-full font-mono">Sincronizado con MedTrack</span>
+        <span class="bg-teal-900 text-teal-200 text-xs px-3 py-1 rounded-full font-mono">Sincronizado en Vivo</span>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 space-y-6">
         
-        <!-- Censo de Camas Dinámico -->
+        <!-- 1. Censo de Camas y Pacientes -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-bed text-teal-600 mr-2"></i>Censo de Camas y Pacientes Sincronizados</h2>
+            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-bed text-teal-600 mr-2"></i>1. Administración de Ocupación y Camas</h2>
             <div id="pacientesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Se llena dinámicamente con JavaScript desde el Kernel -->
+                <!-- Dinámico -->
             </div>
         </section>
 
-        <!-- Programación de Quirófanos -->
+        <!-- 3. Control Operativo del Personal y Turnos -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-microscope text-teal-600 mr-2"></i>Programación de Quirófanos (Asignación Inteligente)</h2>
-            <div id="quirofanosContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Se llena dinámicamente -->
+            <h2 class="text-xl font-bold mb-4 text-slate-800"><i class="fa-solid fa-user-clock text-teal-600 mr-2"></i>3. Control Operativo del Personal y Turnos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form id="formTurno" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-sm text-slate-700">Asignar Nuevo Turno de Guardia</h3>
+                    <input type="text" id="nombrePersonal" placeholder="Nombre del Personal (Ej. Dra. Gomez)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                    <input type="text" id="rolPersonal" placeholder="Rol (Ej. Médico Residente / Enfermero)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                    <input type="text" id="turnoPersonal" placeholder="Turno (Ej. Tarde 14h - 22h)" required class="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm">
+                    <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-lg transition">Registrar Turno</button>
+                </form>
+                <div id="personalContainer" class="space-y-2 overflow-y-auto max-h-48">
+                    <!-- Dinámico -->
+                </div>
             </div>
         </section>
 
     </main>
 
     <script>
-        function renderUI() {
+        function renderHospitFlow() {
             const container = document.getElementById('pacientesContainer');
             container.innerHTML = SystemKernel.state.pacientes.map(p => `
-                <div class="p-4 border rounded-xl ${p.triaje === 'Rojo' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}">
+                <div class="p-4 border rounded-xl ${p.estado === 'Alta Médica' ? 'bg-slate-50 border-slate-200 opacity-60' : p.triaje === 'Rojo' ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-lg">${p.nombre} (${p.id})</span>
+                        <span class="font-bold text-base">${p.nombre} (${p.id})</span>
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold ${p.triaje === 'Rojo' ? 'bg-red-600 text-white' : 'bg-amber-500 text-white'}">${p.triaje}</span>
                     </div>
-                    <p class="text-xs text-slate-600 mt-2">Ubicación: <strong>${p.cama}</strong> | Diagnóstico: ${p.diagnostico}</p>
-                    <p class="text-xs text-slate-500 mt-1">Insumos Cargados: ${p.insumos.join(', ')}</p>
+                    <p class="text-xs text-slate-600 mt-2">Ubicación: <strong>${p.cama}</strong> | Estado: <span class="font-semibold text-teal-700">${p.estado}</span></p>
+                    <p class="text-xs text-slate-500 mt-1">Diagnóstico: ${p.diagnostico}</p>
+                    ${p.estado !== 'Alta Médica' ? `
+                        <button onclick="SystemKernel.darDeAltaPaciente('${p.id}')" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                            <i class="fa-solid fa-check mr-1"></i> Dar de Alta Médica
+                        </button>
+                    ` : '<span class="inline-block mt-3 text-xs text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Proceso Finalizado</span>'}
                 </div>
             `).join('');
 
-            const qContainer = document.getElementById('quirofanosContainer');
-            qContainer.innerHTML = SystemKernel.state.quirofanos.map(q => `
-                <div class="p-4 border rounded-xl ${q.estado === 'Ocupado' ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold">${q.nombre} (${q.id})</span>
-                        <span class="text-xs font-bold px-2 py-1 rounded ${q.estado === 'Ocupado' ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'}">${q.estado}</span>
+            const pContainer = document.getElementById('personalContainer');
+            if(SystemKernel.state.personal) {
+                pContainer.innerHTML = SystemKernel.state.personal.map(per => `
+                    <div class="p-3 bg-white border border-slate-200 rounded-lg flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-slate-800">${per.nombre}</span>
+                            <p class="text-slate-500">${per.rol}</p>
+                        </div>
+                        <span class="bg-teal-100 text-teal-800 px-2 py-1 rounded font-semibold">${per.turno}</span>
                     </div>
-                    ${q.estado === 'Ocupado' ? `<p class="text-xs text-slate-600">Paciente: <strong>${q.paciente}</strong> | Cirujano: ${q.cirujano}</p>` : `
-                        <button onclick="SystemKernel.asignarQuirofano('${q.id}', 'Carlos Mendoza', 'Dr. Silva')" class="mt-2 bg-teal-600 text-white text-xs px-3 py-1.5 rounded font-bold hover:bg-teal-700">Asignar Cirugía de Emergencia</button>
-                    `}
-                </div>
-            `).join('');
+                `).join('');
+            }
         }
 
-        window.addEventListener('kernelUpdated', renderUI);
-        document.addEventListener('DOMContentLoaded', renderUI);
+        document.getElementById('formTurno').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombrePersonal').value;
+            const rol = document.getElementById('rolPersonal').value;
+            const turno = document.getElementById('turnoPersonal').value;
+
+            SystemKernel.agregarTurnoPersonal(nombre, rol, turno);
+            e.target.reset();
+            alert('Turno de personal registrado con éxito.');
+        });
+
+        window.addEventListener('kernelUpdated', renderHospitFlow);
+        document.addEventListener('DOMContentLoaded', renderHospitFlow);
     </script>
 </body>
 </html>
